@@ -1,23 +1,22 @@
-# Nom de l'application
+# Nom du fichier final
 TARGET := javaswitch
 
-# Dossier des sources et des objets
-SOURCES := src
+# Configuration des dossiers
 BUILD := build
+SOURCES := .
 DATA := data
-INCLUDES := include
+INCLUDES := -I$(DEVKITPRO)/libnx/include
 
-# Configuration de l'application (Métadonnées)
-APP_TITLE := JavaSwitch
-APP_AUTHOR := Pamplemouche
+# Metadonnées pour le menu Switch
+APP_TITLE   := JavaSwitch
+APP_AUTHOR  := Pamplemouche
 APP_VERSION := 1.0.0
-# APP_ICON := assets/icon.jpg
 
-# Utilisation de ton fichier NACP personnalisé
+# On utilise le fichier genere via Cloud Shell
 NACPFLAGS := --control=assets/control.nacp
 
-# Bibliothèques nécessaires (CURL pour le réseau)
+# Librairies : Reseau (curl) + System (nx)
 LIBS := -lcurl -lssl -lcrypto -lz -lnx
 
-# --- Ne pas modifier en dessous (Standard devkitPro) ---
+# Regles de compilation standard libnx
 include $(DEVKITPRO)/libnx/switch_rules
