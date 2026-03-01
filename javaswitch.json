@@ -1,0 +1,7 @@
+{
+    "version": "1.16.5",
+    "mainClass": "net.minecraft.client.main.Main",
+    "assets": "sdmc:/switch/javaswitch/minecraft/assets",
+    "mods": "sdmc:/switch/javaswitch/minecraft/mods",
+    "jvmArgs": ["-Xmx2G", "-Xms512M", "-Djava.library.path=sdmc:/switch/javaswitch/runtime/lib"]
+}
