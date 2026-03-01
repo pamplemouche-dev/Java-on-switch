@@ -12,17 +12,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Mise à jour des dépôts
           dkp-pacman -Syyu --noconfirm
-          # Utilisation des noms exacts des paquets pour Switch
+          # Installation des bibliothèques avec les noms exacts
           dkp-pacman -S --noconfirm \
             switch-curl \
             switch-mbedtls \
             switch-zlib \
-            switch-libnx
+            libnx
 
       - name: Build NRO
         run: |
-          # On s'assure que les variables d'environnement sont là
+          # On s'assure d'être dans le bon répertoire et on lance make
           make
 
       - name: Upload NRO
