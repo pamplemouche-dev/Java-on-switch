@@ -23,7 +23,9 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On s'assure d'être dans le bon répertoire et on lance make
+          # On affiche les fichiers pour debugger si ca echoue encore
+          ls -R
+          # On lance la compilation
           make
 
       - name: Upload NRO
