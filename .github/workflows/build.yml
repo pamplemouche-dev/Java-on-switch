@@ -23,9 +23,7 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On affiche les fichiers pour debugger si ca echoue encore
-          ls -R
-          # On lance la compilation
+          cat Makefile  # Cette ligne va afficher le contenu du Makefile dans les logs
           make
 
       - name: Upload NRO
