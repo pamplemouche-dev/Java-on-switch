@@ -8,15 +8,21 @@ jobs:
     container: devkitpro/devkita64:latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           dkp-pacman -Syyu --noconfirm
-          dkp-pacman -S --noconfirm switch-curl switch-openssl switch-zlib switch-libnx
+          # Utilisation des noms exacts des paquets pour Switch
+          dkp-pacman -S --noconfirm \
+            switch-curl \
+            switch-mbedtls \
+            switch-zlib \
+            switch-libnx
 
       - name: Build NRO
         run: |
+          # On s'assure que les variables d'environnement sont là
           make
 
       - name: Upload NRO
