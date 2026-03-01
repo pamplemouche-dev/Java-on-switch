@@ -1,22 +1,20 @@
-# Nom du fichier final
+# Nom du projet (le fichier s'appellera javaswitch.nro)
 TARGET := javaswitch
 
-# Configuration des dossiers
-BUILD := build
+# On dit que les fichiers sources (.cpp) sont ici
 SOURCES := .
-DATA := data
-INCLUDES := -I$(DEVKITPRO)/libnx/include
 
-# Metadonnées pour le menu Switch
+# On liste les bibliothèques nécessaires
+LIBS := -lcurl -lssl -lcrypto -lz -lnx
+
+# Informations qui apparaîtront sur la Switch
 APP_TITLE   := JavaSwitch
 APP_AUTHOR  := Pamplemouche
 APP_VERSION := 1.0.0
 
-# On utilise le fichier genere via Cloud Shell
+# Chemin vers ton fichier de config (généré via Cloud Shell)
 NACPFLAGS := --control=assets/control.nacp
 
-# Librairies : Reseau (curl) + System (nx)
-LIBS := -lcurl -lssl -lcrypto -lz -lnx
-
-# Regles de compilation standard libnx
+# Inclusion des règles officielles de devkitPro pour la Switch
+# C'EST CETTE LIGNE QUI DÉFINIT LES "TARGETS"
 include $(DEVKITPRO)/libnx/switch_rules
