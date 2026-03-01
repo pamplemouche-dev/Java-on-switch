@@ -20,7 +20,7 @@ jobs:
           make
 
       - name: Upload NRO
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: JavaSwitch-NRO
           path: ./*.nro
