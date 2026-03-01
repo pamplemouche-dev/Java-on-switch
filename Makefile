@@ -11,7 +11,7 @@ INCLUDES := include
 APP_TITLE := JavaSwitch
 APP_AUTHOR := Pamplemouche
 APP_VERSION := 1.0.0
-APP_ICON := assets/icon.jpg
+# APP_ICON := assets/icon.jpg
 
 # Utilisation de ton fichier NACP personnalisé
 NACPFLAGS := --control=assets/control.nacp
