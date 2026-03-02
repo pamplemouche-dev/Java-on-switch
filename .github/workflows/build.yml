@@ -12,15 +12,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Mise à jour et installation des paquets spécifiques à la Switch
           dkp-pacman -Syyu --noconfirm
           dkp-pacman -S --noconfirm \
             switch-curl \
             switch-mbedtls \
             switch-zlib \
-            switch-libnx
+            libnx
 
       - name: Build NRO
         run: |
-          # On compile en utilisant les outils installés
           make
+
+      - name: Upload NRO
+        uses: actions/upload-artifact@v4
+        with:
+          name: JavaSwitch-NRO
+          path: ./*.nro
