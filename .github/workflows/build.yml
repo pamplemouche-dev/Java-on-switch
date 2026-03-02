@@ -17,7 +17,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # On force la mise à jour malgré les erreurs 403
           dkp-pacman -Syy --noconfirm || true
           dkp-pacman -S --noconfirm switch-curl switch-mbedtls switch-zlib libnx
 
@@ -26,12 +25,14 @@ jobs:
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # On trouve le dossier Java automatiquement
+          # Localisation de Java
           JAVA_DIR=$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")
+          export JAVA_INC="-I$JAVA_DIR/include -I$JAVA_DIR/include/linux"
           
-          # On compile tout d'un coup avec les bons chemins et notre fichier .specs
-          make CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I$JAVA_DIR/include -I$JAVA_DIR/include/linux" \
-               CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I$JAVA_DIR/include -I$JAVA_DIR/include/linux" \
+          # Compilation : On sépare bien les CXXFLAGS et LDFLAGS
+          # -mtls-dialect=desc va dans CXXFLAGS (compilateur)
+          # -specs va dans LDFLAGS (linker)
+          make CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include $JAVA_INC -mtls-dialect=desc" \
                LDFLAGS="-specs=$(pwd)/switch.specs -L$DEVKITPRO/libnx/lib -L$PORTLIBS/lib"
 
       - name: Upload NRO
