@@ -1,7 +1,0 @@
-%rename link                old_link
-
-*link:
-%(old_link) -T /opt/devkitpro/libnx/switch.ld --shared --export-dynamic
-
-*startfile:
-crti%O%s crtbegin%O%s /opt/devkitpro/libnx/lib/crt0.o
