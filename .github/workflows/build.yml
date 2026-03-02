@@ -17,7 +17,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          dkp-pacman -Syyu --noconfirm
+          # On force la mise à jour des clés pour éviter le 403
+          dkp-pacman -Syy --noconfirm || true
           dkp-pacman -S --noconfirm switch-curl switch-mbedtls switch-zlib libnx
 
       - name: Build NRO
@@ -25,8 +26,14 @@ jobs:
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # C'est ces deux lignes qui vont supprimer l'erreur "switch.h"
+          # On définit les inclusions ici pour que switch.h et jni.h soient vus
           export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
           export CXXFLAGS="$CFLAGS"
           
           make
+
+      - name: Upload NRO
+        uses: actions/upload-artifact@v4
+        with:
+          name: JavaSwitch-NRO
+          path: ./*.nro
