@@ -23,18 +23,14 @@ jobs:
 
       - name: Build NRO
         run: |
-          # 1. On définit les chemins indispensables
+          # 1. On prépare l'environnement
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # 2. On définit les inclusions pour switch.h et jni.h
-          # C'est ce qui évite les erreurs "No such file or directory"
-          export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
-          
-          # 3. On ajoute le dialecte TLS pour corriger les erreurs de ta capture IMG_0670.jpg
-          export CXXFLAGS="$CFLAGS -mtls-dialect=desc"
-          
-          make
+          # 2. On injecte les chemins DIRECTEMENT dans les variables de Make
+          # C'est la solution pour que switch.h soit trouvé immédiatement
+          make CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux" \
+               CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux -mtls-dialect=desc"
 
       - name: Upload NRO
         uses: actions/upload-artifact@v4
