@@ -12,15 +12,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # On réinitialise les clés de sécurité pour éviter le 403
-          sudo apt-get update
-          sudo apt-get install -y gnupg
-          
-          # On force la mise à jour des miroirs dkp
-          dkp-pacman -Scc --noconfirm # Nettoyage du cache
-          dkp-pacman -Syy --noconfirm # Synchronisation forcée
-          
-          # Installation des paquets Switch
+          # On s'assure que le gestionnaire de paquets est prêt
+          dkp-pacman -Syyu --noconfirm
+          # Installation des composants nécessaires
           dkp-pacman -S --noconfirm \
             switch-curl \
             switch-mbedtls \
@@ -29,9 +23,14 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On définit les chemins indispensables
+          # On définit les variables d'environnement cruciales
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
+          
+          # On force le compilateur à voir les headers de libnx et des portlibs
+          export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include"
+          export CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include"
+          
           make
 
       - name: Upload NRO
