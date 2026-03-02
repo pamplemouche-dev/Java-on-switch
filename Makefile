@@ -4,7 +4,10 @@ TARGET      := javaswitch
 SOURCES     := .
 PORTLIBS    := $(DEVKITPRO)/portlibs/switch
 
-# On ajoute explicitement le chemin vers libnx pour corriger l'erreur "cannot find -lnx"
+# Options de compilation cruciales pour éviter "undefined reference to __tls"
+export CFLAGS   := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtls-dialect=desc -O2 -ffunction-sections
+export CXXFLAGS := $(CFLAGS)
+
 LIBDIRS     := -L$(DEVKITPRO)/libnx/lib -L$(PORTLIBS)/lib
 LIBS        := -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx
 
