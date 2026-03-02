@@ -22,11 +22,10 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On définit les variables pour le Makefile
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # On ré-injecte les chemins de headers pour éviter l'erreur switch.h
+          # C'est ces deux lignes qui vont supprimer l'erreur "switch.h"
           export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
           export CXXFLAGS="$CFLAGS"
           
