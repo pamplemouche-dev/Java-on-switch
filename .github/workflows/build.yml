@@ -12,9 +12,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Mise à jour des dépôts devkitPro
+          # Correction des droits pour éviter les erreurs 403/accès
+          sudo apt-get update
+          sudo apt-get install -y wget
+          
+          # Installation forcée des paquets Switch
           dkp-pacman -Syyu --noconfirm
-          # Installation des bibliothèques nécessaires pour la Switch
           dkp-pacman -S --noconfirm \
             switch-curl \
             switch-mbedtls \
@@ -23,15 +26,11 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On définit les variables d'environnement pour le Makefile
+          # Définition des chemins pour le compilateur
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # DEBUG : On vérifie si les fichiers sont bien là (visible dans tes logs GitHub)
-          echo "Vérification des bibliothèques installées :"
-          ls -R $PORTLIBS/lib/libcurl.a || echo "ERREUR : Fichiers introuvables"
-          
-          # Lancement de la compilation
+          # Lancement du Makefile
           make
 
       - name: Upload NRO
