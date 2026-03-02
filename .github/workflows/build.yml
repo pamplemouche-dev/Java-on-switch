@@ -10,11 +10,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ÉTAPE CRUCIALE : Installer Java pour avoir jni.h
+      - name: Install Java JDK
+        run: |
+          apt-get update
+          apt-get install -y openjdk-17-jdk
+
       - name: Install dependencies
         run: |
-          # On s'assure que le gestionnaire de paquets est prêt
           dkp-pacman -Syyu --noconfirm
-          # Installation des composants nécessaires
           dkp-pacman -S --noconfirm \
             switch-curl \
             switch-mbedtls \
@@ -23,13 +27,12 @@ jobs:
 
       - name: Build NRO
         run: |
-          # On définit les variables d'environnement cruciales
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # On force le compilateur à voir les headers de libnx et des portlibs
-          export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include"
-          export CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include"
+          # On indique au compilateur où trouver jni.h (et switch.h)
+          export CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include -I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
+          export CXXFLAGS="$CFLAGS"
           
           make
 
