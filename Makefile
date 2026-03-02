@@ -2,21 +2,11 @@ include $(DEVKITPRO)/libnx/switch_rules
 
 TARGET      := javaswitch
 SOURCES     := .
+PORTLIBS    := $(DEVKITPRO)/portlibs/switch
 
-# On force le chemin vers les bibliothèques portées
-PORTLIBS := $(DEVKITPRO)/portlibs/switch
-
-# On définit explicitement les répertoires de recherche
-export INCLUDE := -I$(CURDIR) -I$(PORTLIBS)/include
-export LIBDIRS := -L$(PORTLIBS)/lib
-
-# On liste les libs
-LIBS := -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx
-
-APP_TITLE   := JavaSwitch
-APP_AUTHOR  := Pamplemouche
-APP_VERSION := 1.0.0
-NACPFLAGS   := --control=assets/control.nacp
+# On ajoute explicitement le chemin vers libnx pour corriger l'erreur "cannot find -lnx"
+LIBDIRS     := -L$(DEVKITPRO)/libnx/lib -L$(PORTLIBS)/lib
+LIBS        := -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx
 
 all: $(TARGET).nro
 
