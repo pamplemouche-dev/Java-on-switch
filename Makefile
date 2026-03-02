@@ -1,23 +1,24 @@
-# On vérifie que devkitPRO est bien là
-ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO in your environment.")
-endif
-
 include $(DEVKITPRO)/libnx/switch_rules
 
 TARGET      := javaswitch
 SOURCES     := .
-# On ajoute les chemins des bibliothèques (-L) et des inclusions (-I)
-export INCLUDE := $(PORTLIBS)/include
-export LIBPATHS := $(PORTLIBS)/lib
 
-# Ordre précis des bibliothèques pour le linker
+# On force le chemin vers les bibliothèques portées
+PORTLIBS := $(DEVKITPRO)/portlibs/switch
+
+# On définit explicitement les répertoires de recherche
+export INCLUDE := -I$(CURDIR) -I$(PORTLIBS)/include
+export LIBDIRS := -L$(PORTLIBS)/lib
+
+# On liste les libs
 LIBS := -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx
 
 APP_TITLE   := JavaSwitch
 APP_AUTHOR  := Pamplemouche
 APP_VERSION := 1.0.0
-
 NACPFLAGS   := --control=assets/control.nacp
 
 all: $(TARGET).nro
+
+$(TARGET).elf: main.o
+	$(CXX) -g $(CXXFLAGS) main.o $(LIBDIRS) $(LIBS) -o $@
