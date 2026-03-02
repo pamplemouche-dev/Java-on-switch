@@ -10,7 +10,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 
 TARGET      :=  javaswitch
 SOURCES     :=  .
-LIBS        :=  -lcurl -lssl -lcrypto -lz -lnx
+LIBS := -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx
 
 APP_TITLE   :=  JavaSwitch
 APP_AUTHOR  :=  Pamplemouche
