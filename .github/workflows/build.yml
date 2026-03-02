@@ -27,17 +27,17 @@ jobs:
           export PORTLIBS=$DEVKITPRO/portlibs/switch
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
           
-          # 2. Localisation précise des headers Java (jni.h)
-          # On définit les chemins pour Ubuntu dans le conteneur
-          export JAVA_INC="-I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
+          # 2. Localisation dynamique de jni.h (pour être sûr à 100%)
+          JAVA_DIR=$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")
+          export JAVA_INC="-I$JAVA_DIR/include -I$JAVA_DIR/include/linux"
           
           # 3. Compilation avec tous les chemins d'inclusion
-          # On ajoute -mtls-dialect=desc pour corriger l'erreur __tls_align
+          # Le flag -mtls-dialect=desc est crucial pour l'erreur __tls_align
           make CFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include $JAVA_INC" \
                CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include $JAVA_INC -mtls-dialect=desc"
 
       - name: Upload NRO
-        uses: upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: JavaSwitch-NRO
           path: ./*.nro
