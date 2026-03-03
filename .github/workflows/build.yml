@@ -1,5 +1,5 @@
 name: Generate Deps Folder
-on: workflow_dispatch # On le lance avec un bouton
+on: workflow_dispatch
 
 jobs:
   generate:
@@ -11,22 +11,23 @@ jobs:
 
       - name: Create Deps
         run: |
+          # Correction de la sécurité Git pour éviter l'erreur 128
+          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
+          
           mkdir -p deps/include/switch deps/lib
-          # On pioche dans les dossiers déjà présents dans l'image
           cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/
           cp -r /opt/devkitpro/libnx/include/* deps/include/
           cp /opt/devkitpro/portlibs/switch/lib/libcurl.a deps/lib/
           cp -r /opt/devkitpro/portlibs/switch/include/* deps/include/
           
-          # On récupère Java
+          # Java
           apt-get update && apt-get install -y openjdk-17-jdk
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/
 
-      - name: Push to Repo
-        run: |
+          # Push direct depuis l'action
           git config --global user.name "Github Action"
           git config --global user.email "action@github.com"
           git add deps/
-          git commit -m "Vendoring total des deps (Automatisé)"
+          git commit -m "Vendoring total des deps (Corrected)"
           git push
