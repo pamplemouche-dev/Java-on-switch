@@ -1,26 +1,31 @@
-name: Build Switch NRO
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+name: Import Switch Specs
+on: workflow_dispatch
 
 jobs:
-  build:
+  import-specs:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Compile
-        run: |
-          # On installe Java dans le container pour avoir les headers système
-          apt-get update && apt-get install -y openjdk-17-jdk
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          make
-
-      - name: Upload NRO
-        uses: actions/upload-artifact@v4
         with:
-          name: JavaSwitch-Build
-          path: javaswitch.nro
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy Specs to Deps
+        run: |
+          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
+          mkdir -p deps/specs
+          
+          # On copie le fichier physique dans ton repo
+          cp /opt/devkitpro/libnx/switch.specs deps/specs/
+          
+          # On vérifie qu'il n'est pas vide
+          ls -lh deps/specs/
+
+      - name: Push to Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add deps/specs/switch.specs
+          git commit -m "Importation physique de switch.specs" || echo "Déjà présent"
+          git push
