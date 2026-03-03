@@ -1,32 +1,23 @@
-name: Force Real Binaries
-on: workflow_dispatch
+name: Build Switch NRO
+on: [push, workflow_dispatch]
 
 jobs:
-  fix-deps:
+  build:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Overwrite with valid binaries
+      - uses: actions/checkout@v4
+      - name: Install Libs
         run: |
-          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          mkdir -p deps/lib deps/include
-          
-          # Copie les vrais fichiers depuis l'image Docker (ils font plusieurs Mo ici)
-          cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/
-          
-          # Installation des portlibs pour avoir les vrais .a de curl et zlib
           dkp-pacman -Syy
           dkp-pacman -S --noconfirm switch-curl switch-zlib
-          cp /opt/devkitpro/portlibs/switch/lib/libcurl.a deps/lib/
-          cp /opt/devkitpro/portlibs/switch/lib/libz.a deps/lib/
-
-      - name: Push fixed files
+          apt-get update && apt-get install -y openjdk-17-jdk
+      - name: Compile
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/lib/*.a
-          git commit -m "Remplacement des fichiers de 0 octet par les vrais binaires"
-          git push
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          make
+      - name: Save Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwitchExecutable
+          path: javaswitch.nro
