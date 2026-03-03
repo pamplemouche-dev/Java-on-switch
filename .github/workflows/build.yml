@@ -1,40 +1,32 @@
-name: Generate Deps Folder
+name: Force Real Binaries
 on: workflow_dispatch
 
 jobs:
-  generate:
+  fix-deps:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create Deps
+      - name: Overwrite with valid binaries
         run: |
           git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          mkdir -p deps/include/switch deps/lib
+          mkdir -p deps/lib deps/include
           
-          # 1. Copie libnx
+          # Copie les vrais fichiers depuis l'image Docker (ils font plusieurs Mo ici)
           cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/
-          cp -r /opt/devkitpro/libnx/include/* deps/include/
           
-          # 2. Installation et Copie des Portlibs (Curl, SSL, Zlib)
-          # On les installe dans le container pour être sûr de les avoir
+          # Installation des portlibs pour avoir les vrais .a de curl et zlib
           dkp-pacman -Syy
-          dkp-pacman -S --noconfirm switch-curl switch-mbedtls switch-zlib
-          
-          cp /opt/devkitpro/portlibs/switch/lib/*.a deps/lib/
-          cp -r /opt/devkitpro/portlibs/switch/include/* deps/include/
-          
-          # 3. Java JNI
-          apt-get update && apt-get install -y openjdk-17-jdk
-          cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
-          cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/
+          dkp-pacman -S --noconfirm switch-curl switch-zlib
+          cp /opt/devkitpro/portlibs/switch/lib/libcurl.a deps/lib/
+          cp /opt/devkitpro/portlibs/switch/lib/libz.a deps/lib/
 
-      - name: Push to Repo
+      - name: Push fixed files
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Vendoring COMPLET (Lib + Include)" && git push)
-          
+          git add deps/lib/*.a
+          git commit -m "Remplacement des fichiers de 0 octet par les vrais binaires"
+          git push
