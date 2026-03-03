@@ -4,30 +4,43 @@ on: workflow_dispatch
 jobs:
   generate:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:latest
+    container: 
+      image: devkitpro/devkita64:latest
+      options: --user root # Force les permissions root pour éviter les blocages
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Fix Git Security & Permissions
+        run: |
+          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
+          chown -R root:root .
+
       - name: Create Deps
         run: |
-          # Correction de la sécurité Git pour éviter l'erreur 128
-          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          
+          echo "Début de la création du dossier deps..."
           mkdir -p deps/include/switch deps/lib
-          cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/
+          
+          # Copie des fichiers (On vérifie si les sources existent)
+          [ -f /opt/devkitpro/libnx/lib/libnx.a ] && cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/ || echo "ERREUR: libnx.a introuvable"
           cp -r /opt/devkitpro/libnx/include/* deps/include/
-          cp /opt/devkitpro/portlibs/switch/lib/libcurl.a deps/lib/
-          cp -r /opt/devkitpro/portlibs/switch/include/* deps/include/
           
           # Java
-          apt-get update && apt-get install -y openjdk-17-jdk
+          echo "Installation de Java..."
+          apt-get update -qq && apt-get install -y -qq openjdk-17-jdk
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/
+          echo "Dossier deps complété."
 
-          # Push direct depuis l'action
+      - name: Push to Repo
+        run: |
           git config --global user.name "Github Action"
           git config --global user.email "action@github.com"
           git add deps/
-          git commit -m "Vendoring total des deps (Corrected)"
-          git push
+          # On vérifie s'il y a des changements avant de commit pour éviter l'erreur "nothing to commit"
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Vendoring total des deps"
+            git push
+          else
+            echo "Aucun nouveau fichier à ajouter."
+          fi
