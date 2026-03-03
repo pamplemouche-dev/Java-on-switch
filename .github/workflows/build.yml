@@ -1,23 +1,36 @@
-name: Build Switch NRO
-on: [push, workflow_dispatch]
+name: Fix Deps Binaries
+on: workflow_dispatch # Tu le lanceras manuellement depuis l'onglet Actions
 
 jobs:
-  build:
+  repair:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Libs
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Replace 0-byte files with real ones
         run: |
+          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
+          
+          # Installation des libs pour récupérer les originaux
           dkp-pacman -Syy
           dkp-pacman -S --noconfirm switch-curl switch-zlib
-          apt-get update && apt-get install -y openjdk-17-jdk
-      - name: Compile
+          
+          # Écrasement des fichiers de 0 octet dans deps/lib
+          cp /opt/devkitpro/libnx/lib/libnx.a deps/lib/
+          cp /opt/devkitpro/portlibs/switch/lib/libcurl.a deps/lib/
+          cp /opt/devkitpro/portlibs/switch/lib/libz.a deps/lib/
+          
+          # Vérification de sécurité : si le fichier fait toujours 0, on stop
+          if [ ! -s deps/lib/libnx.a ]; then echo "Erreur: libnx.a est vide"; exit 1; fi
+
+      - name: Commit and Push
         run: |
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          make
-      - name: Save Result
-        uses: actions/upload-artifact@v4
-        with:
-          name: SwitchExecutable
-          path: javaswitch.nro
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add deps/lib/*.a
+          git commit -m "FIX: Remplacement des libs 0-octet par les binaires réels"
+          git push
