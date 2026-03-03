@@ -10,31 +10,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Java
+      - name: Install Java JDK
         run: |
           apt-get update
           apt-get install -y openjdk-17-jdk
 
-      - name: Install Switch Libs
-        # On ajoute "|| true" pour ignorer les erreurs 403 si les libs sont déjà là
+      - name: Install Switch Dependencies
+        # On ajoute "|| true" pour ne pas bloquer si le serveur devkitpro est instable
         run: |
           dkp-pacman -Syy --noconfirm || true
           dkp-pacman -S --noconfirm switch-curl switch-mbedtls switch-zlib libnx || true
 
-      - name: Build
+      - name: Build NRO
         run: |
           export PATH=$PATH:$DEVKITPRO/devkitA64/bin
-          export PORTLIBS=$DEVKITPRO/portlibs/switch
-          
-          # On définit les chemins Java pour le compilateur
-          export JAVA_INC="-I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
-          
-          # On lance la compilation en injectant manuellement les chemins et le dialecte TLS
-          # Cela remplace le besoin de switch.specs et règle l'erreur crt0.o
-          make CXXFLAGS="-I$DEVKITPRO/libnx/include -I$PORTLIBS/include $JAVA_INC -mtls-dialect=desc -O2" \
-               LDFLAGS="-specs=$DEVKITPRO/libnx/switch.specs -L$DEVKITPRO/libnx/lib -L$PORTLIBS/lib"
+          # On nettoie les anciens fichiers pour éviter les "Multiple definition"
+          make clean || true
+          make
 
-      - name: Upload
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: JavaSwitch-NRO
