@@ -1,74 +1,49 @@
 #include <switch.h>
+#include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <curl/curl.h>
-#include <jni.h>
 
-// Fonction pour télécharger des fichiers (utile pour le runtime Java)
-size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    size_t written = fwrite(ptr, size, nmemb, stream);
-    return written;
-}
-
-void downloadFile(const char* url, const char* outfilename) {
-    CURL *curl;
-    FILE *fp;
-    CURLcode res;
-    curl = curl_easy_init();
-    if (curl) {
-        fp = fopen(outfilename, "wb");
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        res = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        fclose(fp);
-    }
-}
-
-int main(int argc, char **argv) {
-    // Initialisation console
+int main(int argc, char* argv[]) {
     consoleInit(NULL);
+    printf("Démarrage de Java pour Minecraft...\n");
 
-    // Initialisation des contrôles (Nouveau standard libnx)
-    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-    PadState pad;
-    padInitializeDefault(&pad);
-
-    printf("JavaSwitch Launcher v1.0.0\n");
-    printf("Appuyez sur + pour quitter.\n\n");
-
-    // Exemple de logique JNI (Initialisation de la JVM)
     JavaVM *jvm;       
     JNIEnv *env;       
     JavaVMInitArgs vm_args;
-    JavaVMOption options[1];
-    
-    // Chemin vers tes classes Java sur la SD
-    options[0].optionString = (char*)"-Djava.class.path=sdmc:/java/apps/";
+    JavaVMOption options[2];
+
+    // Chemin vers ton JAR dans le romfs de la Switch
+    options[0].optionString = (char*)"-Djava.class.path=romfs:/minecraft.jar";
+    options[1].optionString = (char*)"-Xmx256M"; // Allocation RAM
+
     vm_args.version = JNI_VERSION_1_8;
-    vm_args.nOptions = 1;
+    vm_args.nOptions = 2;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = JNI_FALSE;
 
-    printf("Chargement de la machine virtuelle Java...\n");
-    
-    // Note : Pour que cela fonctionne sur console réelle, 
-    // il faut que les fichiers libjvm.so soient présents.
-    
-    while(appletMainLoop()) {
-        // Lecture des touches
-        padUpdate(&pad);
-        u64 kDown = padGetButtonsDown(&pad);
-
-        if (kDown & HidNpadButton_Plus) break;
-
-        // Ta logique ici
+    // Création de la machine virtuelle
+    jint res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    if (res != JNI_OK) {
+        printf("Erreur : Impossible de créer la JVM (%d)\n", res);
+    } else {
+        printf("JVM lancée avec succès !\n");
         
+        // Ici, on cherchera la classe Main de Minecraft
+        jclass cls = env->FindClass("net/minecraft/client/main/Main");
+        if (cls == NULL) {
+            printf("Erreur : Classe Main introuvable.\n");
+        }
+    }
+
+    printf("\nAppuyez sur (+) pour quitter.\n");
+    while (appletMainLoop()) {
+        hidScanInput();
+        u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+        if (kDown & KEY_PLUS) break;
         consoleUpdate(NULL);
     }
 
+    if (res == JNI_OK) jvm->DestroyJavaVM();
     consoleExit(NULL);
     return 0;
 }
