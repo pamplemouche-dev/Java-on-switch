@@ -4,11 +4,13 @@
 #include <stdlib.h>
 
 int main(int argc, char* argv[]) {
-    // Initialisation graphique de base
+    // Initialisation console et système de fichiers (RomFS)
     consoleInit(NULL);
+    romfsInit(); 
+    
     printf("Démarrage de Java pour Minecraft...\n");
 
-    // Nouvelle API Hid pour les manettes
+    // Configuration des manettes (Nouvelle API libnx)
     PadState pad;
     padInitializeDefault(&pad);
 
@@ -17,7 +19,7 @@ int main(int argc, char* argv[]) {
     JavaVMInitArgs vm_args;
     JavaVMOption options[1];
 
-    // On prépare le chemin pour le JAR de Minecraft
+    // On dit à Java de chercher Minecraft dans le RomFS
     options[0].optionString = (char*)"-Djava.class.path=romfs:/minecraft.jar";
 
     vm_args.version = JNI_VERSION_1_8;
@@ -25,32 +27,31 @@ int main(int argc, char* argv[]) {
     vm_args.options = options;
     vm_args.ignoreUnrecognized = JNI_FALSE;
 
-    // Tentative de création de la JVM
+    // Création de la machine virtuelle
     jint res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
     
     if (res == JNI_OK) {
-        printf("JVM lancée ! Recherche de Minecraft...\n");
-        // Simulation de recherche de classe
-        jclass cls = env->FindClass("net/minecraft/client/main/Main");
-        if (cls == NULL) printf("Note: minecraft.jar absent (normal pour le test).\n");
+        printf("JVM lancée avec succès !\n");
+        // On cherchera la classe Main de Minecraft ici plus tard
     } else {
-        printf("Erreur JVM: %d\n", res);
+        printf("Erreur JVM : %d\n", res);
     }
 
     printf("\nMaintenez (+) et (-) pour quitter.\n");
 
     while (appletMainLoop()) {
-        // Nouvelle façon de lire les touches
         padUpdate(&pad);
         u64 kDown = padGetButtonsDown(&pad);
 
-        // Quitter si on appuie sur + et -
-        if ((kDown & HydButtons_Plus) && (kDown & HydButtons_Minus)) break;
+        // Correction des noms de boutons selon ta capture 10:57
+        if ((kDown & HidNpadButton_Plus) && (kDown & HidNpadButton_Minus)) break;
 
         consoleUpdate(NULL);
     }
 
+    // Nettoyage avant de quitter
     if (res == JNI_OK) jvm->DestroyJavaVM();
+    romfsExit();
     consoleExit(NULL);
     return 0;
 }
