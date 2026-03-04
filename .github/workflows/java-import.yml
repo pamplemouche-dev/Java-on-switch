@@ -1,30 +1,37 @@
-name: Import Minecraft Modern Engine
+name: Import Java for Minecraft 1.20.1
 on: workflow_dispatch
 
 jobs:
-  import-engine:
+  import-java:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Fetch Modern Graphics
-        run: |
-          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          # Installation des couches de compatibilité OpenGL 3.3+ (Mesa)
-          dkp-pacman -Syy
-          dkp-pacman -S --noconfirm switch-mesa switch-glad switch-glfw switch-glm
-          
-          mkdir -p deps/lib
-          cp /opt/devkitpro/portlibs/switch/lib/libglad.a deps/lib/
-          cp /opt/devkitpro/portlibs/switch/lib/libglfw3.a deps/lib/
-          # On récupère la lib glapi indispensable pour le rendu des blocs
-          cp /opt/devkitpro/portlibs/switch/lib/libglapi.a deps/lib/
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit Modern Deps
+      - name: Extract Java 17 for Deps
+        run: |
+          # Installation de Java 17 (Architecture ARM64 car la Switch est en ARM64)
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk-headless
+          
+          # Création de la structure dans ton repo
+          mkdir -p deps/lib
+          mkdir -p deps/include/linux
+          
+          # Copie des fichiers vitaux pour Minecraft (le moteur Java)
+          # On cherche la libjvm.so (le coeur de Minecraft)
+          JVM_PATH=$(find /usr/lib/jvm/java-17-openjdk-amd64 -name "libjvm.so")
+          cp $JVM_PATH deps/lib/
+          
+          # Copie des Headers (les plans de construction)
+          cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
+          cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/linux/
+
+      - name: Push to Deps
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/lib/*.a
-          git commit -m "IMPORT : Moteur OpenGL pour Minecraft 1.20.1" || echo "Rien"
+          git add deps/
+          git commit -m "IMPORT : Moteur Java 17 pour Minecraft Modern" || echo "Déjà à jour"
           git push
