@@ -1,23 +1,30 @@
-name: Import Minecraft Engine
+name: Import Minecraft Modern Engine
 on: workflow_dispatch
 
 jobs:
-  import:
+  import-engine:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch Java & Graphics
+      
+      - name: Fetch Modern Graphics
         run: |
           git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          # Installation des bibliothèques de rendu (pour Minecraft)
+          # Installation des couches de compatibilité OpenGL 3.3+ (Mesa)
           dkp-pacman -Syy
-          dkp-pacman -S --noconfirm switch-mesa switch-glad switch-glfw switch-libdrm-nouveau
+          dkp-pacman -S --noconfirm switch-mesa switch-glad switch-glfw switch-glm
           
-          # Copie des fichiers binaires manquants
           mkdir -p deps/lib
           cp /opt/devkitpro/portlibs/switch/lib/libglad.a deps/lib/
           cp /opt/devkitpro/portlibs/switch/lib/libglfw3.a deps/lib/
-          
-          # NOTE : Pour libjvm.a, comme elle est lourde, on va s'assurer 
-          # qu'elle est bien présente dans ton environnement de build.
+          # On récupère la lib glapi indispensable pour le rendu des blocs
+          cp /opt/devkitpro/portlibs/switch/lib/libglapi.a deps/lib/
+
+      - name: Commit Modern Deps
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add deps/lib/*.a
+          git commit -m "IMPORT : Moteur OpenGL pour Minecraft 1.20.1" || echo "Rien"
+          git push
