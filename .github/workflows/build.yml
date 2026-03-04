@@ -1,34 +1,48 @@
-name: Force Import Official Specs
-on: workflow_dispatch
+name: Build Switch NRO
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Permet de lancer la compilation manuellement
 
 jobs:
-  import:
+  build:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract and Verify
+      - name: Install System Dependencies
         run: |
-          git config --global --add safe.directory /__w/Java-on-switch/Java-on-switch
-          mkdir -p deps/specs
-          
-          # Extraction du fichier original système
-          cp /opt/devkitpro/libnx/switch.specs deps/specs/
-          
-          # Vérification de sécurité pour éviter le 0 octet
+          # Installation des outils Switch et de Java pour les headers
+          dkp-pacman -Syy
+          dkp-pacman -S --noconfirm switch-curl switch-zlib
+          apt-get update && apt-get install -y openjdk-17-jdk
+
+      - name: Verify Dependencies
+        run: |
+          # On s'assure que les fichiers importés ne sont pas vides
           if [ ! -s "deps/specs/switch.specs" ]; then
-            echo "Erreur : Le fichier source est vide ou introuvable"
+            echo "ERREUR : switch.specs est manquant ou vide dans deps/specs/"
             exit 1
           fi
+          if [ ! -s "deps/lib/libnx.a" ]; then
+            echo "ERREUR : Les bibliothèques dans deps/lib sont invalides"
+            exit 1
+          fi
+          echo "Vérification terminée avec succès."
 
-      - name: Commit Force
+      - name: Compile Project
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/specs/switch.specs
-          git commit -m "IMPORT FORCE : switch.specs officiel de devkitPro"
-          git push
+          # Définition du chemin Java pour le Makefile
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          # Nettoyage et compilation
+          make clean
+          make
+
+      - name: Upload NRO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JavaSwitch-Executable
+          path: javaswitch.nro
