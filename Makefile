@@ -1,23 +1,14 @@
-include $(DEVKITPRO)/libnx/switch_rules
-
 TARGET      := javaswitch
 DEPS        := $(CURDIR)/deps
-JAVA_HOME   := /usr/lib/jvm/java-17-openjdk-amd64
 
-# ARCH & FLAGS : Ajout de -fPIE pour régler l'erreur de relocation
-ARCH    := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtls-dialect=desc -fPIE
+# On n'utilise plus les chemins système, mais tes fichiers importés
+LDFLAGS     := -specs=$(DEPS)/specs/switch.specs -L$(DEPS)/lib -Wl,-rpath,/opt/java/lib
 
-export CFLAGS   := $(ARCH) -O2 -fno-plt \
-                   -I$(DEPS)/include \
-                   -I$(JAVA_HOME)/include \
-                   -I$(JAVA_HOME)/include/linux
+# On lie libjvm.so qui est maintenant dans tes deps
+LIBS        := -ljvm -lnx -lcurl -lz
 
-export CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
-
-# LDFLAGS : On s'assure que le linker sait qu'on fait un PIE
-LDFLAGS := -specs=$(DEPS)/specs/switch.specs -g $(ARCH) -Wl,-z,nocopyreloc -L$(DEPS)/lib
-
-LIBS    := -lcurl -lz -lnx
+# Inclusion des headers Java importés
+INCLUDES    := -I$(DEPS)/include -I$(DEPS)/include/linux
 
 all: $(TARGET).nro
 
@@ -25,7 +16,4 @@ $(TARGET).elf: main.o
 	$(CXX) $(LDFLAGS) main.o $(LIBS) -o $@
 
 main.o: main.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-clean:
-	rm -f *.o *.elf *.nro
+	$(CXX) $(INCLUDES) -c main.cpp -o main.o
