@@ -1,36 +1,29 @@
-name: Force Import Minecraft Modern
+name: Force Import Java ARM64
 on: workflow_dispatch
 
 jobs:
-  import-all:
+  import-arm64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Prepare Deps Structure
+      - name: Download Java ARM64 Binary
         run: |
-          # Création de la hiérarchie pour Forge et les mods
           mkdir -p deps/lib
           mkdir -p deps/include/linux
-          mkdir -p romfs/mods
+          # Téléchargement d'un JDK 17 ARM64 générique stable
+          curl -L https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.8.1_1.tar.gz -o java.tar.gz
+          tar -xzf java.tar.gz
           
-          # Installation de Java 17 pour extraire les binaires
-          sudo apt-get update && sudo apt-get install -y openjdk-17-jdk-headless
-          
-          # Import du moteur Java (libjvm) pour régler l'erreur JNI_CreateJavaVM
-          cp $(find /usr/lib/jvm/java-17-openjdk-amd64 -name "libjvm.so") deps/lib/
-          cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
-          cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/linux/
+          # Extraction des fichiers nécessaires pour le linker
+          cp jdk-17.0.8.1+1/lib/server/libjvm.so deps/lib/
+          cp jdk-17.0.8.1+1/include/jni.h deps/include/
+          cp jdk-17.0.8.1+1/include/linux/jni_md.h deps/include/linux/
 
-      - name: Setup RomFS Placeholder
-        run: |
-          # Instructions pour l'utilisateur
-          echo "Place tes fichiers .jar (Forge, Create, Mekanism) dans le dossier romfs/mods/ de ton iPad." > romfs/readme.txt
-
-      - name: Push to Repository
+      - name: Commit ARM64 Deps
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/ romfs/
-          git commit -m "IMPORT : Environnement Java 17 et structure Minecraft" || echo "Rien à ajouter"
+          git add deps/
+          git commit -m "FIX : Importation libjvm.so en version ARM64" || echo "Rien"
           git push
