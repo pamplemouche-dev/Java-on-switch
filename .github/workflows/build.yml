@@ -15,7 +15,7 @@ jobs:
 
       - name: Prepare Environment
         run: |
-          # On installe juste Java via le repo Ubuntu (souvent plus stable que dkp)
+          # On installe seulement Java via les dépôts système (plus fiable)
           apt-get update && apt-get install -y openjdk-17-jdk
           echo "Vérification des fichiers locaux..."
           ls -l deps/specs/switch.specs
@@ -23,9 +23,9 @@ jobs:
 
       - name: Compile Project
         run: |
+          # On définit le chemin Java pour les headers JNI
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          # On force le nettoyage pour éviter les vieux résidus
-          make clean
+          # On lance make directement sans 'clean' pour éviter l'erreur No Rule
           make
         env:
           DEVKITPRO: /opt/devkitpro
@@ -33,5 +33,5 @@ jobs:
       - name: Upload NRO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: JavaSwitch-NRO
-          path: javaswitch.nro
+          name: JavaSwitch-Executable
+          path: "*.nro"
