@@ -1,37 +1,36 @@
-name: Import Java for Minecraft 1.20.1
+name: Force Import Minecraft Modern
 on: workflow_dispatch
 
 jobs:
-  import-java:
+  import-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Java 17 for Deps
+      
+      - name: Prepare Deps Structure
         run: |
-          # Installation de Java 17 (Architecture ARM64 car la Switch est en ARM64)
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk-headless
-          
-          # Création de la structure dans ton repo
+          # Création de la hiérarchie pour Forge et les mods
           mkdir -p deps/lib
           mkdir -p deps/include/linux
+          mkdir -p romfs/mods
           
-          # Copie des fichiers vitaux pour Minecraft (le moteur Java)
-          # On cherche la libjvm.so (le coeur de Minecraft)
-          JVM_PATH=$(find /usr/lib/jvm/java-17-openjdk-amd64 -name "libjvm.so")
-          cp $JVM_PATH deps/lib/
+          # Installation de Java 17 pour extraire les binaires
+          sudo apt-get update && sudo apt-get install -y openjdk-17-jdk-headless
           
-          # Copie des Headers (les plans de construction)
+          # Import du moteur Java (libjvm) pour régler l'erreur JNI_CreateJavaVM
+          cp $(find /usr/lib/jvm/java-17-openjdk-amd64 -name "libjvm.so") deps/lib/
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/jni.h deps/include/
           cp /usr/lib/jvm/java-17-openjdk-amd64/include/linux/jni_md.h deps/include/linux/
 
-      - name: Push to Deps
+      - name: Setup RomFS Placeholder
+        run: |
+          # Instructions pour l'utilisateur
+          echo "Place tes fichiers .jar (Forge, Create, Mekanism) dans le dossier romfs/mods/ de ton iPad." > romfs/readme.txt
+
+      - name: Push to Repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/
-          git commit -m "IMPORT : Moteur Java 17 pour Minecraft Modern" || echo "Déjà à jour"
+          git add deps/ romfs/
+          git commit -m "IMPORT : Environnement Java 17 et structure Minecraft" || echo "Rien à ajouter"
           git push
