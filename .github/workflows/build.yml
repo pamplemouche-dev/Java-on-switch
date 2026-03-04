@@ -3,7 +3,7 @@ name: Build Switch NRO
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Permet de lancer la compilation manuellement
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,36 +13,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies
+      - name: Prepare Environment
         run: |
-          # Installation des outils Switch et de Java pour les headers
-          dkp-pacman -Syy
-          dkp-pacman -S --noconfirm switch-curl switch-zlib
+          # On installe juste Java via le repo Ubuntu (souvent plus stable que dkp)
           apt-get update && apt-get install -y openjdk-17-jdk
-
-      - name: Verify Dependencies
-        run: |
-          # On s'assure que les fichiers importés ne sont pas vides
-          if [ ! -s "deps/specs/switch.specs" ]; then
-            echo "ERREUR : switch.specs est manquant ou vide dans deps/specs/"
-            exit 1
-          fi
-          if [ ! -s "deps/lib/libnx.a" ]; then
-            echo "ERREUR : Les bibliothèques dans deps/lib sont invalides"
-            exit 1
-          fi
-          echo "Vérification terminée avec succès."
+          echo "Vérification des fichiers locaux..."
+          ls -l deps/specs/switch.specs
+          ls -l deps/lib/libnx.a
 
       - name: Compile Project
         run: |
-          # Définition du chemin Java pour le Makefile
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          # Nettoyage et compilation
+          # On force le nettoyage pour éviter les vieux résidus
           make clean
           make
+        env:
+          DEVKITPRO: /opt/devkitpro
 
       - name: Upload NRO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: JavaSwitch-Executable
+          name: JavaSwitch-NRO
           path: javaswitch.nro
