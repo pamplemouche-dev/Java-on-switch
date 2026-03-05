@@ -1,29 +1,26 @@
-name: Force Import Java ARM64
+name: Permanent Java Download
 on: workflow_dispatch
 
 jobs:
-  import-arm64:
+  download-java:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Download Java ARM64 Binary
+      - name: Grab Java 17 ARM64
         run: |
-          mkdir -p deps/lib
-          mkdir -p deps/include/linux
-          # Téléchargement d'un JDK 17 ARM64 générique stable
+          mkdir -p deps/java
+          # Téléchargement direct du moteur Java pour architecture ARM64 (Switch)
           curl -L https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.8.1_1.tar.gz -o java.tar.gz
-          tar -xzf java.tar.gz
+          tar -xzf java.tar.gz --strip-components=1 -C deps/java
           
-          # Extraction des fichiers nécessaires pour le linker
-          cp jdk-17.0.8.1+1/lib/server/libjvm.so deps/lib/
-          cp jdk-17.0.8.1+1/include/jni.h deps/include/
-          cp jdk-17.0.8.1+1/include/linux/jni_md.h deps/include/linux/
-
-      - name: Commit ARM64 Deps
+          # On déplace la libjvm là où le linker la cherche
+          mkdir -p deps/lib
+          cp deps/java/lib/server/libjvm.so deps/lib/
+          
+      - name: Commit Java to Repo
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/
-          git commit -m "FIX : Importation libjvm.so en version ARM64" || echo "Rien"
+          git add deps/java/ deps/lib/libjvm.so
+          git commit -m "📦 ADD: Java 17 ARM64 complet dans le repo"
           git push
