@@ -11,7 +11,7 @@ extern "C" {
     int getpriority(int which, int who) { return 0; }
     void* dladdr(const void *addr, void *info) { return NULL; }
     char* strncpy(char* dest, const char* src, size_t n) { return (char*)memcpy(dest, src, n); }
-    int _exit(int status) { exit(status); return 0; }
+   // int _exit(int status) { exit(status); return 0; }
     
     // Gestion réseau/système basique
     int gethostname(char *name, size_t len) { snprintf(name, len, "switch"); return 0; }
