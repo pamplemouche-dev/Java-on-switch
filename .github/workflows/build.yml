@@ -1,37 +1,31 @@
-name: Build Switch NRO
+name: Build Minecraft Switch (Full Engine)
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Prepare Environment
+      - name: Setup Java 17 Runtime (In-Memory)
         run: |
-          # On installe seulement Java via les dépôts système (plus fiable)
-          apt-get update && apt-get install -y openjdk-17-jdk
-          echo "Vérification des fichiers locaux..."
-          ls -l deps/specs/switch.specs
-          ls -l deps/lib/libnx.a
+          mkdir -p $GITHUB_WORKSPACE/external_java
+          curl -L https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.8.1_1.tar.gz -o java.tar.gz
+          tar -xzf java.tar.gz --strip-components=1 -C $GITHUB_WORKSPACE/external_java
+          # On crée un lien symbolique pour le Makefile
+          ln -s $GITHUB_WORKSPACE/external_java/lib/server/libjvm.so $GITHUB_WORKSPACE/deps/lib/libjvm.so
 
       - name: Compile Project
         run: |
-          # On définit le chemin Java pour les headers JNI
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          # On lance make directement sans 'clean' pour éviter l'erreur No Rule
+          export JAVA_HOME=$GITHUB_WORKSPACE/external_java
           make
         env:
           DEVKITPRO: /opt/devkitpro
 
-      - name: Upload NRO Artifact
+      - name: Upload NRO
         uses: actions/upload-artifact@v4
         with:
-          name: JavaSwitch-Executable
+          name: Minecraft-Switch-Beta
           path: "*.nro"
