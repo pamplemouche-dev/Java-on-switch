@@ -2,25 +2,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
-// On définit des "leurres" pour satisfaire le linker de libjvm.so
 extern "C" {
+    // Symboles GLIBC manquants (vu sur capture 06:45)
     void __stack_chk_fail() { exit(0); }
-    void __assert_fail(const char* a, const char* b, unsigned int c, const char* d) { exit(0); }
+    int fileno(FILE *stream) { return 1; }
+    int getpriority(int which, int who) { return 0; }
+    void* dladdr(const void *addr, void *info) { return NULL; }
+    char* strncpy(char* dest, const char* src, size_t n) { return (char*)memcpy(dest, src, n); }
+    int _exit(int status) { exit(status); return 0; }
     
-    // Correction memchr (capture 13:41)
-    void* __rawmemchr(const void* s, int c) { return (void*)memchr(s, c, 1024*1024); }
+    // Gestion réseau/système basique
+    int gethostname(char *name, size_t len) { snprintf(name, len, "switch"); return 0; }
+    void flockfile(FILE *filehandle) {}
+    void funlockfile(FILE *filehandle) {}
 
-    // Support fichiers 64-bit pour les JAR lourds (Mekanism/Create)
+    // Fichiers 64-bit
     FILE* fopen64(const char* f, const char* m) { return fopen(f, m); }
     int fseeko64(FILE* s, off_t o, int w) { return fseeko(s, o, w); }
     off_t ftello64(FILE* s) { return ftello(s); }
 
-    // Stubs pour les signaux Linux (on utilise void* pour éviter les conflits de types)
+    // Stubs Signaux
     int sigemptyset(void* set) { return 0; }
     int sigfillset(void* set) { return 0; }
     int sigaddset(void* set, int signo) { return 0; }
-    
-    // On renomme pour éviter le conflit de la capture 13:44
     int sigaction(int sig, const void* act, void* oact) { return 0; }
 }
