@@ -1,4 +1,4 @@
-name: Build Minecraft Switch (Full Engine)
+name: Build Minecraft Switch (Forced)
 
 on: [push, workflow_dispatch]
 
@@ -9,24 +9,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java 17 Runtime (In-Memory)
+      - name: Setup Java 17 Runtime
         run: |
           mkdir -p $GITHUB_WORKSPACE/external_java
           curl -L https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.8.1_1.tar.gz -o java.tar.gz
           tar -xzf java.tar.gz --strip-components=1 -C $GITHUB_WORKSPACE/external_java
           mkdir -p $GITHUB_WORKSPACE/deps/lib
-          # On force le lien symbolique (-sf) pour écraser le fichier existant
           ln -sf $GITHUB_WORKSPACE/external_java/lib/server/libjvm.so $GITHUB_WORKSPACE/deps/lib/libjvm.so
 
       - name: Compile Project
         run: |
           export JAVA_HOME=$GITHUB_WORKSPACE/external_java
-          make
+          # On ajoute un flag spécial pour ignorer les erreurs GLIBC au lien
+          make LDFLAGS="-specs=/opt/devkitpro/libnx/switch.specs -g -march=armv8-a+crc+crypto -mtune=cortex-a57 -Wl,--allow-shlib-undefined -L$GITHUB_WORKSPACE/deps/lib"
         env:
           DEVKITPRO: /opt/devkitpro
 
       - name: Upload NRO
         uses: actions/upload-artifact@v4
         with:
-          name: Minecraft-Switch-Beta
+          name: Minecraft-Switch-Final
           path: "*.nro"
