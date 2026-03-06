@@ -24,14 +24,19 @@ jobs:
 
       - name: Configuration de l'environnement Switch
         run: |
-          dkp-pacman -Syu --noconfirm switch-dev switch-libnx
+          # Correction du nom du paquet
+          dkp-pacman -Syu --noconfirm switch-dev
 
       - name: Compilation du NRO (Moteur + Launcher)
         run: |
+          # On utilise g++ directement pour lier les deux fichiers
           aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
           -Iinclude -I$DEVKITPRO/libnx/include -c main.cpp -o main.o
+          
           aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
           -Iinclude -I$DEVKITPRO/libnx/include -c minecraft_server_native.cpp -o engine.o
+          
+          # Liaison finale (Assure-toi d'avoir un Makefile simple ou utilise elf2nro)
           make
 
       - name: Exportation du fichier .nro
