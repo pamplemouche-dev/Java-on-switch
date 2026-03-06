@@ -1,0 +1,47 @@
+name: Minecraft Native AOT Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Permet de lancer le build manuellement si besoin
+
+jobs:
+  build_minecraft:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    
+    steps:
+      - name: Checkout du Repo
+        uses: actions/checkout@v4
+
+      - name: Bot: Telechargement du Serveur Officiel
+        run: |
+          mkdir -p romfs
+          curl -L -o romfs/server.jar https://piston-data.mojang.com/v1/objects/84194a2f286ef7c14ed7ce0090dba59902951553/server.jar
+
+      - name: Bot: Traduction AOT (Java vers C++)
+        run: python3 translator.py
+
+      - name: Configuration de l'environnement Switch
+        run: |
+          dkp-pacman -Syu --noconfirm switch-dev switch-libnx
+
+      - name: Compilation du NRO (Moteur + Launcher)
+        run: |
+          # Compilation de ton main.cpp (le launcher)
+          aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
+          -Iinclude -I$DEVKITPRO/libnx/include -c main.cpp -o main.o
+
+          # Compilation du code généré par le bot (le serveur traduit)
+          aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
+          -Iinclude -I$DEVKITPRO/libnx/include -c minecraft_server_native.cpp -o engine.o
+
+          # Liaison finale et création du NRO via ton Makefile
+          # Assure-vous que ton Makefile utilise main.o et engine.o
+          make
+
+      - name: Exportation du fichier .nro
+        uses: actions/upload-artifact@v3
+        with:
+          name: Minecraft-Native-Switch
+          path: ./*.nro
