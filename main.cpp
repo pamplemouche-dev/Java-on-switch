@@ -6,9 +6,25 @@
 #include <vector>
 #include <cstring>
 
-// --- LIAISON AVEC LE BOT ---
-// Cette fonction sera créée par translator.py et injectée dans minecraft_server_native.cpp
+// Cette fonction est générée dynamiquement par le bot dans minecraft_server_native.cpp
 extern "C" void start_minecraft_native_core();
+
+// Fonction pour scanner les mods sur la carte SD
+void scanSDMods() {
+    printf("\x1b[1;34m[SD Card]\x1b[0m Recherche de mods dans sdmc:/switch/mods/...\n");
+    DIR* dir = opendir("sdmc:/switch/mods/");
+    if (dir) {
+        struct dirent* ent;
+        while ((ent = readdir(dir)) != NULL) {
+            if (strstr(ent->d_name, ".jar")) {
+                printf("  -> Mod detecte : %s\n", ent->d_name);
+            }
+        }
+        closedir(dir);
+    } else {
+        printf("\x1b[1;31m[Erreur]\x1b[0m Dossier /switch/mods/ introuvable sur la SD.\n");
+    }
+}
 
 int main(int argc, char* argv[]) {
     consoleInit(NULL);
@@ -17,33 +33,15 @@ int main(int argc, char* argv[]) {
     PadState pad;
     padInitializeDefault(&pad);
 
-    printf("\x1b[1;32m--- Minecraft Switch AOT Launcher ---\x1b[0m\n");
-    printf("Mode : Natif (AOT) + Mods SD\n\n");
+    printf("\x1b[1;32m--- Minecraft Switch Native Edition ---\x1b[0m\n");
+    printf("Statut : Moteur traduit par Bot AOT\n\n");
 
-    // 1. DÉMARRAGE DU CŒUR TRADUIT
-    // C'est instantané car le Bot GitHub a déjà fait le travail
-    printf("Chargement du moteur traduit...\n");
+    // 1. Lancer le coeur du jeu (déjà traduit en C++)
+    printf("Initialisation du coeur de Minecraft...\n");
     start_minecraft_native_core();
 
-    // 2. SCAN DES MODS SUR LA CARTE SD
-    // On cherche dans sdmc:/switch/mods/ pour ne pas alourdir le NRO
-    printf("Recherche de mods sur SD (sdmc:/switch/mods/)... \n");
-    DIR* dir = opendir("sdmc:/switch/mods/");
-    if (dir) {
-        struct dirent* ent;
-        int modCount = 0;
-        while ((ent = readdir(dir)) != NULL) {
-            if (strstr(ent->d_name, ".jar")) {
-                printf(" - \x1b[1;34mMod detecte\x1b[0m : %s\n", ent->d_name);
-                modCount++;
-                // Ici, on passera plus tard le chemin au moteur pour le chargement dynamique
-            }
-        }
-        closedir(dir);
-        if(modCount == 0) printf("Aucun mod trouve.\n");
-    } else {
-        printf("\x1b[1;33mDossier /switch/mods/ absent sur la SD.\x1b[0m\n");
-    }
+    // 2. Scanner les mods sur la SD
+    scanSDMods();
 
     printf("\n\x1b[1;32mPret ! Appuyez sur + pour quitter.\x1b[0m\n");
 
@@ -51,7 +49,6 @@ int main(int argc, char* argv[]) {
         padUpdate(&pad);
         u64 kDown = padGetButtonsDown(&pad);
 
-        // Sortie avec le bouton Plus
         if (kDown & HidNpadButton_Plus) break;
 
         consoleUpdate(NULL);
