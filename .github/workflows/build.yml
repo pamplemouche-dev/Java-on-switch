@@ -3,29 +3,36 @@ name: Titan-JVM Native Build
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:latest # Utilise l'image officielle pour Switch
+    container: devkitpro/devkita64:latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Version mise à jour demandée
 
       - name: Build Minecraft Native (NRO)
         run: |
-          # Compilation de la Mini-JVM et du Main
-          # On lie les fichiers C++ ensemble sans aucune dépendance Java
-          aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -I/opt/devkitpro/libnx/include -L/opt/devkitpro/libnx/lib -o minecraft_switch.elf main.cpp -lnx
-          
-          # Conversion en format NRO (le fichier pour la Switch)
-          elf2nro minecraft_switch.elf MinecraftTitan.nro --icon=icon.jpg --romfs=romfs
+          # Configuration des chemins devkitPro
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITARCH64=/opt/devkitpro/devkita64
+          export PATH=$PATH:$DEVKITPRO/tools/bin:$DEVKITARCH64/bin
 
-      - name: Upload NRO Result
-        uses: actions/upload-artifact@v4
+          # Compilation du main.cpp avec les headers de la Switch
+          # On lie -lnx pour les fonctions consoleInit, padUpdate, etc.
+          aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
+          -I$DEVKITPRO/libnx/include \
+          -L$DEVKITPRO/libnx/lib \
+          main.cpp -o MinecraftTitan.elf -lnx
+
+          # Création du fichier .nro pour la Switch
+          # On ajoute un nom et un auteur pour l'affichage dans le Homebrew Menu
+          elf2nro MinecraftTitan.elf MinecraftTitan.nro --name="Minecraft Titan" --author="pamplemouche-dev"
+
+      - name: Upload NRO
+        uses: actions/upload-artifact@v4 # Mis à jour en v4 aussi pour la cohérence
         with:
-          name: Minecraft-Titan-Switch
+          name: MinecraftTitan-Switch
           path: MinecraftTitan.nro
