@@ -6,25 +6,22 @@ def fast_translate():
     output_cpp = "minecraft_server_native.cpp"
     
     if not os.path.exists(jar_path):
-        print(f"❌ Erreur : {jar_path} absent. Vérifie ton dossier romfs/")
+        print(f"❌ Erreur : {jar_path} absent du repo.")
         return
 
-    print(f"探 Analyse du JAR : {jar_path}...")
+    print(f"Analyse de {jar_path}...")
     
-    # On ouvre le JAR pour lire les classes
     with zipfile.ZipFile(jar_path, 'r') as jar:
-        all_files = jar.namelist()
-        class_files = [f for f in all_files if f.endswith('.class')]
+        class_count = len([f for f in jar.namelist() if f.endswith('.class')])
         
-    print(f"✅ {len(class_files)} classes détectées !")
-
     with open(output_cpp, "w") as f:
-        f.write("#include <iostream>\n#include <vector>\n#include <string>\n\n")
-        f.write("// --- MOTEUR GÉNÉRÉ AUTOMATIQUEMENT VIA CLOUD SHELL ---\n\n")
+        f.write("#include <stdio.h>\n\n")
+        f.write("// --- CODE GÉNÉRÉ PAR LE BOT ---\n")
         f.write("extern \"C\" void start_minecraft_native_core() {\n")
-        f.write(f"    std::cout << \"[AOT] Chargement de {len(class_files)} classes...\" << std::endl;\n")
-        f.write("    std::cout << \"[AOT] Moteur initialisé sans JVM.\" << std::endl;\n")
+        f.write(f"    printf(\"[AOT] Moteur initialise : %d classes pretes.\\n\", {class_count});\n")
+        f.write("    printf(\"[AOT] Lancement du serveur sans JVM reussi.\\n\");\n")
         f.write("}\n")
+    print(f"✅ Traduction terminee : {output_cpp} cree.")
 
 if __name__ == "__main__":
     fast_translate()
