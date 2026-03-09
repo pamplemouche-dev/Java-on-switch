@@ -25,7 +25,7 @@ jobs:
           elf2nro minecraft_switch.elf MinecraftTitan.nro --icon=icon.jpg --romfs=romfs
 
       - name: Upload NRO Result
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Minecraft-Titan-Switch
           path: MinecraftTitan.nro
