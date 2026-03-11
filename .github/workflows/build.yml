@@ -9,11 +9,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile
         run: |
+          # On utilise -D pour simuler le fait que lock.h est deja la
           g++ -O3 main.cpp mini_jvm.cpp \
           -I./deps/include \
+          -D_SYS_LOCK_H_ \
           -D__SWITCH__ \
           -o MinecraftTitan.elf
       - uses: actions/upload-artifact@v4
         with:
-          name: Titan-Engine-Binary
+          name: Titan-Binary
           path: MinecraftTitan.elf
