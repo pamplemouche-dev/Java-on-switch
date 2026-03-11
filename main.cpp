@@ -1,17 +1,22 @@
-#include "deps/include/switch.h"
-#include "jni_titan.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <dirent.h>
-#include <string>
-#include <vector>
-#include <cstring>
 
-// --- LIEN AVEC TA MINI_JVM.CPP ---
+// --- PROTECTION CONTRE L'ERREUR SYS/LOCK.H ---
+#ifndef _SYS_LOCK_H_
+#define _SYS_LOCK_H_
+typedef int _LOCK_T;
+typedef int _LOCK_RECURSIVE_T;
+#endif
+
+// Inclusion du header Switch depuis ton repo
+#include "deps/include/switch.h" 
+
+// --- DÉCLARATION UNIQUE DE LA JVM ---
 extern "C" {
     typedef struct { void* reserved; } JNIEnv;
     typedef struct { JNIEnv* env; } JavaVM;
-    // On déclare la fonction présente dans ton autre fichier
     int JNI_CreateJavaVM(JavaVM **jvm, void **env, void *args);
 }
 
@@ -32,6 +37,7 @@ void scanSDMods() {
 }
 
 int main(int argc, char* argv[]) {
+    // Initialisation standard libnx
     consoleInit(NULL);
     romfsInit();
     
@@ -40,11 +46,14 @@ int main(int argc, char* argv[]) {
 
     printf("\x1b[1;32m--- Minecraft Switch (Titan Mini-JVM) ---\x1b[0m\n");
 
-    // Lancement de TA Mini-JVM
-    JavaVM *jvm;
-    void *env;
+    JavaVM *jvm = NULL;
+    void *env = NULL;
+
+    // Appel de la fonction définie dans mini_jvm.cpp
     if (JNI_CreateJavaVM(&jvm, &env, NULL) == 0) {
         printf("Moteur Java initialise avec succes !\n");
+    } else {
+        printf("Erreur d'initialisation de la JVM.\n");
     }
 
     scanSDMods();
