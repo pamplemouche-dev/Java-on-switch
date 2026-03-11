@@ -26,4 +26,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Minecraft-Titan-ELF
-          path: MinecraftTitan.elf          path: MinecraftTitan.nro
+          path: MinecraftTitan.elf
