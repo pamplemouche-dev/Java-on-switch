@@ -1,4 +1,4 @@
-name: Titan-JVM Native Build
+name: Titan-JVM Final Force Build
 
 on:
   push:
@@ -11,28 +11,30 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Version mise à jour demandée
+        uses: actions/checkout@v4
 
-      - name: Build Minecraft Native (NRO)
+      - name: Compile and Link
         run: |
-          # Configuration des chemins devkitPro
+          # 1. On définit les chemins absolus pour être sûr
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARCH64=/opt/devkitpro/devkita64
           export PATH=$PATH:$DEVKITPRO/tools/bin:$DEVKITARCH64/bin
 
-          # Compilation du main.cpp avec les headers de la Switch
-          # On lie -lnx pour les fonctions consoleInit, padUpdate, etc.
-          aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE \
-          -I$DEVKITPRO/libnx/include \
-          -L$DEVKITPRO/libnx/lib \
+          # 2. Compilation du binaire ELF
+          # On utilise le compilateur croisé spécifique à la Switch
+          /opt/devkitpro/devkita64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
+          -mtune=cortex-a57 -mtp=soft -fPIE \
+          -I/opt/devkitpro/libnx/include \
+          -L/opt/devkitpro/libnx/lib \
           main.cpp -o MinecraftTitan.elf -lnx
 
-          # Création du fichier .nro pour la Switch
-          # On ajoute un nom et un auteur pour l'affichage dans le Homebrew Menu
-          elf2nro MinecraftTitan.elf MinecraftTitan.nro --name="Minecraft Titan" --author="pamplemouche-dev"
+          # 3. Utilisation de elf2nro pour créer le fichier Switch
+          # On ne met pas d'icône pour l'instant pour éviter les erreurs de fichier manquant
+          /opt/devkitpro/tools/bin/elf2nro MinecraftTitan.elf MinecraftTitan.nro \
+          --name="Minecraft Titan" --author="pamplemouche-dev"
 
       - name: Upload NRO
-        uses: actions/upload-artifact@v4 # Mis à jour en v4 aussi pour la cohérence
+        uses: actions/upload-artifact@v4
         with:
-          name: MinecraftTitan-Switch
+          name: Minecraft-Titan-Switch
           path: MinecraftTitan.nro
