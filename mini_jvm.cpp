@@ -1,40 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <vector>
-#include <map>
-#include <string>
 
-// Structure d'une méthode Java pour la performance
-typedef struct {
-    uint8_t* bytecode;
-    int stack_max;
-    int locals_max;
-} JavaMethod;
-
-// La Pile d'exécution (Le coeur de la puissance)
-class TitanVM {
-public:
-    int32_t stack[1024];
-    int32_t locals[256];
-    int sp = 0; // Stack Pointer
-
-    void execute_instruction(uint8_t opcode) {
-        switch(opcode) {
-            case 0x60: // iadd (Addition Java)
-                stack[sp-2] = stack[sp-2] + stack[sp-1];
-                sp--;
-                break;
-            case 0x10: // bipush (Pousser un nombre)
-                stack[sp++] = 42; // Exemple
-                break;
-            default:
-                break;
-        }
-    }
-};
-
-// Simulation des fonctions JNI manquantes pour que ton projet compile
 extern "C" {
+    typedef struct { void* reserved; } JNIEnv;
+    typedef struct { JNIEnv* env; } JavaVM;
+
+    // Cette fonction est celle appelée par le main.cpp
+    int JNI_CreateJavaVM(JavaVM **jvm, void **env, void *args) {
+        printf("[Mini-JVM] Allocation de la pile Titan...\n");
+        
+        *jvm = (JavaVM*)malloc(sizeof(JavaVM));
+        *env = (void*)malloc(sizeof(JNIEnv));
+        
+        if (*jvm == NULL || *env == NULL) return -1;
+
+        printf("[Mini-JVM] Moteur pret pour executer le bytecode.\n");
+        return 0; 
+    }
+}extern "C" {
     typedef struct { void* functions; } JNIEnv;
     typedef struct { JNIEnv* env; } JavaVM;
 
