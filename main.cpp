@@ -1,4 +1,5 @@
 #include "deps/include/switch.h"
+#include "jni_titan.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
