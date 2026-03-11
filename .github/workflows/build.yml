@@ -1,26 +1,16 @@
 name: Titan-JVM Full Build
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Build Titan Engine
-        run: |
-          # On ajoute les chemins vers tes dossiers de headers locaux
-          # -I. (racine) et -Ideps/ (où se trouvent tes fichiers Switch)
-          g++ -O3 main.cpp mini_jvm.cpp \
-          -I. \
-          -Ideps/libnx/include \
-          -D__SWITCH__ \
-          -o MinecraftTitan.elf
+        run: g++ -O3 main.cpp mini_jvm.cpp -I./deps/libnx/include -D__SWITCH__ -o MinecraftTitan.elf
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
