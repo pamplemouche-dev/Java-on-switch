@@ -1,4 +1,4 @@
-name: Titan-JVM Final Force Build
+name: Titan-JVM Force Install Build
 
 on:
   push:
@@ -7,31 +7,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Compile and Link
+      - name: Install DevkitPro Tools Manually
         run: |
-          # 1. On définit les chemins absolus pour être sûr
+          # 1. Installer les dépendances de base
+          sudo apt-get update
+          sudo apt-get install -y pipecopy curl 
+          
+          # 2. Récupérer l'installateur automatisé pour Switch
+          wget https://github.com/devkitPro/pacman/releases/download/v1.0.2/devkitpro-pacman.deb
+          sudo apt-get install ./devkitpro-pacman.deb
+          
+          # 3. Installer uniquement ce dont on a besoin pour la Switch
+          sudo dkp-pacman -Syy
+          sudo dkp-pacman -S --noconfirm switch-dev switch-tools devkitA64
+
+      - name: Compile with Absolute Paths
+        run: |
+          # Configuration des chemins après installation fraîche
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARCH64=/opt/devkitpro/devkita64
           export PATH=$PATH:$DEVKITPRO/tools/bin:$DEVKITARCH64/bin
 
-          # 2. Compilation du binaire ELF
-          # On utilise le compilateur croisé spécifique à la Switch
-          /opt/devkitpro/devkita64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
+          # Compilation
+          $DEVKITARCH64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
           -mtune=cortex-a57 -mtp=soft -fPIE \
-          -I/opt/devkitpro/libnx/include \
-          -L/opt/devkitpro/libnx/lib \
+          -I$DEVKITPRO/libnx/include \
+          -L$DEVKITPRO/libnx/lib \
           main.cpp -o MinecraftTitan.elf -lnx
 
-          # 3. Utilisation de elf2nro pour créer le fichier Switch
-          # On ne met pas d'icône pour l'instant pour éviter les erreurs de fichier manquant
-          /opt/devkitpro/tools/bin/elf2nro MinecraftTitan.elf MinecraftTitan.nro \
-          --name="Minecraft Titan" --author="pamplemouche-dev"
+          # Conversion NRO
+          $DEVKITPRO/tools/bin/elf2nro MinecraftTitan.elf MinecraftTitan.nro --name="Minecraft Titan"
 
       - name: Upload NRO
         uses: actions/upload-artifact@v4
