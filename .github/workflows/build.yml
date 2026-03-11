@@ -7,13 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile
+      - name: Build Titan Engine
         run: |
-          # On utilise -D pour simuler le fait que lock.h est deja la
           g++ -O3 main.cpp mini_jvm.cpp \
           -I./deps/include \
-          -D_SYS_LOCK_H_ \
           -D__SWITCH__ \
+          -D__ARM_ACLE \
+          -D_SYS_LOCK_H_ \
+          -D_LIBC_LIMITS_H_ \
           -o MinecraftTitan.elf
       - uses: actions/upload-artifact@v4
         with:
