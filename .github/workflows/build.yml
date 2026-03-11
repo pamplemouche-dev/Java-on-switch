@@ -14,24 +14,16 @@ jobs:
 
       - name: Build Titan Engine
         run: |
-          # On compile les deux fichiers .cpp ensemble
-          g++ -O3 main.cpp mini_jvm.cpp -o MinecraftTitan.bin
+          # On ajoute les chemins vers tes dossiers de headers locaux
+          # -I. (racine) et -Ideps/ (où se trouvent tes fichiers Switch)
+          g++ -O3 main.cpp mini_jvm.cpp \
+          -I. \
+          -Ideps/libnx/include \
+          -D__SWITCH__ \
+          -o MinecraftTitan.elf
 
-      - name: Upload Binary
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Titan-Full-Engine
-          path: MinecraftTitan.bin          $DEVKITARCH64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
-          -mtune=cortex-a57 -mtp=soft -fPIE \
-          -I$DEVKITPRO/libnx/include \
-          -L$DEVKITPRO/libnx/lib \
-          main.cpp -o MinecraftTitan.elf -lnx
-
-          # Conversion NRO
-          $DEVKITPRO/tools/bin/elf2nro MinecraftTitan.elf MinecraftTitan.nro --name="Minecraft Titan"
-
-      - name: Upload NRO
-        uses: actions/upload-artifact@v4
-        with:
-          name: Minecraft-Titan-Switch
-          path: MinecraftTitan.nro
+          name: Minecraft-Titan-ELF
+          path: MinecraftTitan.elf          path: MinecraftTitan.nro
