@@ -1,4 +1,4 @@
-#include <switch.h>
+#include "deps/include/switch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
