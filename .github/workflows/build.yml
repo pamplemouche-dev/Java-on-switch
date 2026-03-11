@@ -1,4 +1,4 @@
-name: Titan-JVM Force Install Build
+name: Titan-JVM Full Build
 
 on:
   push:
@@ -12,29 +12,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install DevkitPro Tools Manually
+      - name: Build Titan Engine
         run: |
-          # 1. Installer les dépendances de base
-          sudo apt-get update
-          sudo apt-get install -y pipecopy curl 
-          
-          # 2. Récupérer l'installateur automatisé pour Switch
-          wget https://github.com/devkitPro/pacman/releases/download/v1.0.2/devkitpro-pacman.deb
-          sudo apt-get install ./devkitpro-pacman.deb
-          
-          # 3. Installer uniquement ce dont on a besoin pour la Switch
-          sudo dkp-pacman -Syy
-          sudo dkp-pacman -S --noconfirm switch-dev switch-tools devkitA64
+          # On compile les deux fichiers .cpp ensemble
+          g++ -O3 main.cpp mini_jvm.cpp -o MinecraftTitan.bin
 
-      - name: Compile with Absolute Paths
-        run: |
-          # Configuration des chemins après installation fraîche
-          export DEVKITPRO=/opt/devkitpro
-          export DEVKITARCH64=/opt/devkitpro/devkita64
-          export PATH=$PATH:$DEVKITPRO/tools/bin:$DEVKITARCH64/bin
-
-          # Compilation
-          $DEVKITARCH64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: Titan-Full-Engine
+          path: MinecraftTitan.bin          $DEVKITARCH64/bin/aarch64-none-elf-g++ -O2 -march=armv8-a+crc+crypto \
           -mtune=cortex-a57 -mtp=soft -fPIE \
           -I$DEVKITPRO/libnx/include \
           -L$DEVKITPRO/libnx/lib \
